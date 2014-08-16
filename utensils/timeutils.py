@@ -141,7 +141,6 @@ def datetime_to_unixtime(dt):
     since the epoc."""
     return calendar.timegm(dt.utctimetuple())
 
-
 def days_in_prev_month(ts):
     return calendar.monthrange(ts.year, ts.month-1)[1]
 

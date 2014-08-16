@@ -52,31 +52,13 @@ kwarg to define). We also accept multi-value options. See the documentation
 for define() below.
 """
 
-from calendar import monthrange
 import datetime
 import logging
 import os
-import re
 import sys
 
-FLOAT_PATTERN = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?'
-
-TIMEDELTA_PATTERN = re.compile(
-    r'\s*(%s)\s*(\w*)\s*' % FLOAT_PATTERN, re.IGNORECASE)
-
-TIMEDELTA_ABBREVS = [
-    ('hours', ['h']),
-    ('minutes', ['m', 'min']),
-    ('seconds', ['s', 'sec']),
-    ('milliseconds', ['ms']),
-    ('microseconds', ['us']),
-    ('days', ['d']),
-    ('weeks', ['w']),
-]
-
-TIMEDELTA_ABBREV_DICT = dict(
-        (abbrev, full) for full, abbrevs in TIMEDELTA_ABBREVS
-        for abbrev in abbrevs)
+from utensils.timutils import parse_datetime
+from utensils.timutils import parse_timedelta
 
 FILE_PATHS =  [
                 "/etc/chartbeat/%s",
@@ -280,7 +262,7 @@ class _Option(object):
 
     def parse(self, value):
         _parse = {
-            datetime.datetime: self._parse_datetime,
+            datetime.datetime: parse_datetime,
             datetime.timedelta: parse_timedelta,
             bool: self._parse_bool,
             str: self._parse_string,
@@ -315,30 +297,6 @@ class _Option(object):
                             (self.name, self.type.__name__))
         self._value = value
 
-    # Supported date/time formats in our options
-    _DATETIME_FORMATS = [
-        "%a %b %d %H:%M:%S %Y",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M",
-        "%Y-%m-%dT%H:%M",
-        "%Y%m%d %H:%M:%S",
-        "%Y%m%d %H:%M",
-        "%Y-%m-%d",
-        "%Y%m%d",
-        "%H:%M:%S",
-        "%H:%M",
-    ]
-
-    def _parse_datetime(self, value):
-        for format in self._DATETIME_FORMATS:
-            try:
-                return datetime.datetime.strptime(value, format)
-            except ValueError:
-                pass
-        raise Error('Unrecognized date/time format: %r' % value)
-
-
-
 
     def _parse_bool(self, value):
         return value.lower() not in ("false", "0", "f")
@@ -365,27 +323,3 @@ def options_to_dict(options):
     for key, value in options.items():
         options_dict[key] = value.value()
     return options_dict
-
-def parse_timedelta(value):
-    try:
-        sum = datetime.timedelta()
-        start = 0
-        while start < len(value):
-            m = TIMEDELTA_PATTERN.match(value, start)
-            if not m:
-                raise Exception()
-            num = float(m.group(1))
-            units = m.group(2) or 'seconds'
-            units = TIMEDELTA_ABBREV_DICT.get(units, units)
-            if units == 'months':
-                _days = days_in_prev_month(datetime.dateime.now())
-                sum += datetime.timedelta(days=int(num)*_days)
-            else:
-                sum += datetime.timedelta(**{units: num})
-            start = m.end()
-        return sum
-    except:
-        raise
-
-def days_in_prev_month(ts):
-    return monthrange(ts.year, ts.month-1)[1]
