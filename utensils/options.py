@@ -52,6 +52,7 @@ kwarg to define). We also accept multi-value options. See the documentation
 for define() below.
 """
 
+from calendar import monthrange
 import datetime
 import logging
 import os
@@ -376,8 +377,15 @@ def parse_timedelta(value):
             num = float(m.group(1))
             units = m.group(2) or 'seconds'
             units = TIMEDELTA_ABBREV_DICT.get(units, units)
-            sum += datetime.timedelta(**{units: num})
+            if units == 'months':
+                _days = days_in_prev_month(datetime.dateime.now())
+                sum += datetime.timedelta(days=int(num)*_days)
+            else:
+                sum += datetime.timedelta(**{units: num})
             start = m.end()
         return sum
     except:
         raise
+
+def days_in_prev_month(ts):
+    return monthrange(ts.year, ts.month-1)[1]
