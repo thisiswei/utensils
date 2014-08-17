@@ -57,8 +57,8 @@ import logging
 import os
 import sys
 
-from utensils.timutils import parse_datetime
-from utensils.timutils import parse_timedelta
+from utensils.timeutils import parse_datetime
+from utensils.timeutils import parse_timedelta
 
 FILE_PATHS =  [
                 "/etc/chartbeat/%s",
