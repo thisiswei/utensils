@@ -200,7 +200,7 @@ def parse_timedelta(value):
             units = m.group(2) or 'seconds'
             units = TIMEDELTA_ABBREV_DICT.get(units, units)
             if units == 'months':
-                _days = days_in_prev_month(datetime.dateime.now())
+                _days = days_in_prev_month(datetime.now())
                 sum += timedelta(days=int(num)*_days)
             else:
                 sum += timedelta(**{units: num})
